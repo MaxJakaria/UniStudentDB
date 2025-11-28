@@ -7,5 +7,8 @@ namespace UniStudentDB.Features.Students.Domain.Repository
     {
         Task<ErrorOr<List<Student>>> GetAllStudentsAsync();
         Task<ErrorOr<Created>> AddStudentAsync(Student student);
+
+        Task<ErrorOr<Updated>> UpdateStudentAsync(Student student);
+        Task<ErrorOr<Deleted>> DeleteStudentAsync(int id);
     }
 }
