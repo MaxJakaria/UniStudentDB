@@ -1,8 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using UniStudentDB.Features.Students.Application.UseCases;
+using UniStudentDB.Features.Students.Application.Validators;
 using UniStudentDB.Features.Students.Data.Repository;
+using UniStudentDB.Features.Students.Domain.Entities;
 using UniStudentDB.Features.Students.Domain.Repository;
-using UniStudentDB.Infrastructure;
 
 namespace UniStudentDB
 {
@@ -17,6 +19,9 @@ namespace UniStudentDB
 
             // 2. Repository Injection (Data Layer)
             services.AddScoped<IStudentRepository, StudentRepository>();
+
+            // Validator Injection
+            services.AddScoped<IValidator<Student>, CreateStudentValidator>();
 
             // 3. UseCase Injection (Application Layer)
             services.AddScoped<CreateStudentUseCase>();
