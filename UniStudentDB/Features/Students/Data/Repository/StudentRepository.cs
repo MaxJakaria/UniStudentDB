@@ -1,9 +1,9 @@
 ﻿using ErrorOr;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using UniStudentDB.Features.Students.Data.Models;
 using UniStudentDB.Features.Students.Domain.Entities;
 using UniStudentDB.Features.Students.Domain.Repository;
-using UniStudentDB.Infrastructure;
 
 namespace UniStudentDB.Features.Students.Data.Repository
 {
@@ -25,12 +25,26 @@ namespace UniStudentDB.Features.Students.Data.Repository
                 await _context.SaveChangesAsync();
                 return Result.Created;
             }
+            catch (DbUpdateException ex)
+            {
+                // duplicte error code 2601/ 2627
+                if (
+                    ex.InnerException != null
+                    && (
+                        ex.InnerException.Message.ToLower().Contains("duplicate")
+                        || ex.InnerException.Message.ToLower().Contains("unique")
+                    )
+                )
+                {
+                    return Error.Conflict("Student.DuplicateEmail", "Email already exists.");
+                }
+                return Error.Failure("Database.Error", ex.Message);
+            }
             catch (Exception ex)
             {
                 return Error.Failure("Create.Failure", ex.Message);
             }
         }
-
 
         public async Task<ErrorOr<List<Student>>> GetAllStudentsAsync()
         {
@@ -52,7 +66,7 @@ namespace UniStudentDB.Features.Students.Data.Repository
             {
                 var model = await _context.Students.FindAsync(student.Id);
 
-                if(model is null)
+                if (model is null)
                 {
                     return Error.NotFound(description: "Student not found");
                 }
@@ -65,11 +79,11 @@ namespace UniStudentDB.Features.Students.Data.Repository
                 _context.Students.Update(model);
                 await _context.SaveChangesAsync();
                 return Result.Updated;
-
-            }catch(Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 return Error.Failure("UpdateStudent.Failure", ex.Message);
             }
-            
         }
 
         public async Task<ErrorOr<Deleted>> DeleteStudentAsync(int id)
@@ -87,13 +101,11 @@ namespace UniStudentDB.Features.Students.Data.Repository
                 await _context.SaveChangesAsync();
 
                 return Result.Deleted;
-
             }
             catch (Exception ex)
             {
                 return Error.Failure("DeleteStudent.Failure", ex.Message);
             }
-            
         }
     }
 }

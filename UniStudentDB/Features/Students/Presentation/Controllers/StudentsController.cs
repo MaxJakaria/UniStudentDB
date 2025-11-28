@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using ErrorOr;
+using Microsoft.AspNetCore.Mvc;
 using UniStudentDB.Features.Students.Application.UseCases;
 using UniStudentDB.Features.Students.Domain.Entities;
 
@@ -35,7 +36,15 @@ namespace UniStudentDB.Features.Students.Presentation
             // ErrorOr : If error occure then give error otherwise not
             return result.Match(
                 created => Ok("Student Created Successfully"),
-                errors => Problem(errors[0].Description)
+                errors => {
+                    var firstError = errors[0];
+                    if (firstError.Type == ErrorType.Conflict)
+                    {
+                        return Problem(detail: firstError.Description, statusCode: 409); // 409 Conflict
+                    }
+
+                    return Problem(detail: firstError.Description, statusCode: firstError.Type == ErrorType.Validation ? 400 : 500);
+                }
             );
         }
 
