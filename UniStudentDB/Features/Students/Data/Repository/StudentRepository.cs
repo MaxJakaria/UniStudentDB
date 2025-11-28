@@ -1,0 +1,48 @@
+﻿using ErrorOr;
+using Microsoft.EntityFrameworkCore;
+using UniStudentDB.Features.Students.Data.Models;
+using UniStudentDB.Features.Students.Domain.Entities;
+using UniStudentDB.Features.Students.Domain.Repository;
+using UniStudentDB.Infrastructure;
+
+namespace UniStudentDB.Features.Students.Data.Repository
+{
+    public class StudentRepository : IStudentRepository
+    {
+        private readonly AppDbContext _context;
+
+        public StudentRepository(AppDbContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<ErrorOr<Created>> AddStudentAsync(Student student)
+        {
+            try
+            {
+                var model = StudentModel.FromEntity(student);
+                await _context.Students.AddAsync(model);
+                await _context.SaveChangesAsync();
+                return Result.Created;
+            }
+            catch (Exception ex)
+            {
+                return Error.Failure("Create.Failure", ex.Message);
+            }
+        }
+
+        public async Task<ErrorOr<List<Student>>> GetAllStudentsAsync()
+        {
+            try
+            {
+                var models = await _context.Students.ToListAsync();
+                // Model -> Entity কাস্টিং (যেহেতু প্যারেন্ট-চাইল্ড রিলেশন)
+                return models.Cast<Student>().ToList();
+            }
+            catch (Exception ex)
+            {
+                return Error.Failure("Fetch.Failure", ex.Message);
+            }
+        }
+    }
+}
