@@ -5,6 +5,7 @@ using UniStudentDB.Features.Students.Application.Validators;
 using UniStudentDB.Features.Students.Data.Repository;
 using UniStudentDB.Features.Students.Domain.Entities;
 using UniStudentDB.Features.Students.Domain.Repository;
+using UniStudentDB.Middlewares;
 
 namespace UniStudentDB
 {
@@ -17,13 +18,16 @@ namespace UniStudentDB
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
-            // 2. Repository Injection (Data Layer)
+            // 2. Middleware Injection
+            services.AddTransient<GlobalExceptionHandlingMiddleware>();
+
+            // 3. Repository Injection (Data Layer)
             services.AddScoped<IStudentRepository, StudentRepository>();
 
-            // Validator Injection
+            // 4. Validator Injection
             services.AddScoped<IValidator<Student>, CreateStudentValidator>();
 
-            // 3. UseCase Injection (Application Layer)
+            // 5. UseCase Injection (Application Layer)
             services.AddScoped<CreateStudentUseCase>();
             services.AddScoped<GetAllStudentsUseCase>();
             services.AddScoped<UpdateStudentUseCase>();

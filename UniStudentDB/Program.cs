@@ -33,6 +33,9 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+// Registering our custom middleware
+app.UseMiddleware<UniStudentDB.Middlewares.GlobalExceptionHandlingMiddleware>();
+
 // Presentation Layer
 app.MapControllers();
 
