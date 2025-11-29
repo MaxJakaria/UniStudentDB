@@ -1,5 +1,4 @@
 ﻿using ErrorOr;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using UniStudentDB.Features.Students.Data.Models;
 using UniStudentDB.Features.Students.Domain.Entities;
@@ -51,12 +50,33 @@ namespace UniStudentDB.Features.Students.Data.Repository
             try
             {
                 var models = await _context.Students.ToListAsync();
-                // Model -> Entity কাস্টিং (যেহেতু প্যারেন্ট-চাইল্ড রিলেশন)
+                // Model -> Entity [casting]
                 return models.Cast<Student>().ToList();
             }
             catch (Exception ex)
             {
                 return Error.Failure("Fetch.Failure", ex.Message);
+            }
+        }
+
+        public async Task<ErrorOr<Student>> GetStudentByIdAsync(int id)
+        {
+            try
+            {
+
+                var model = await _context.Students.FindAsync(id);
+
+                if (model is null)
+                {
+                    return Error.NotFound(description: "Student not found");
+                }
+
+                // Model -> Entity [auto-cast]
+                return model;
+            }
+            catch (Exception ex)
+            {
+                return Error.Failure("GetStudentById.Failure", ex.Message);
             }
         }
 
@@ -71,10 +91,14 @@ namespace UniStudentDB.Features.Students.Data.Repository
                     return Error.NotFound(description: "Student not found");
                 }
 
-                model.Name = student.Name;
-                model.Email = student.Email;
-                model.Department = student.Department;
-                model.Cgpa = student.Cgpa;
+                if (!string.IsNullOrWhiteSpace(student.Name))
+                {
+                    model.Name = student.Name;
+                }
+                if (!string.IsNullOrWhiteSpace(student.Email))
+                {
+                    model.Email = student.Email;
+                }
 
                 _context.Students.Update(model);
                 await _context.SaveChangesAsync();
@@ -107,5 +131,7 @@ namespace UniStudentDB.Features.Students.Data.Repository
                 return Error.Failure("DeleteStudent.Failure", ex.Message);
             }
         }
+
+        
     }
 }

@@ -28,6 +28,7 @@ namespace UniStudentDB
             services.AddScoped<GetAllStudentsUseCase>();
             services.AddScoped<UpdateStudentUseCase>();
             services.AddScoped<DeleteStudentUseCase>();
+            services.AddScoped<GetStudentByIdUseCase>();
 
             return services;
         }

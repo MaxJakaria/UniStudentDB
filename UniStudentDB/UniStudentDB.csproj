@@ -20,7 +20,6 @@
 
   <ItemGroup>
     <Folder Include="Application\" />
-    <Folder Include="Core\" />
     <Folder Include="Features\Students\Data\DataSources\" />
     <Folder Include="Infrastructure\" />
   </ItemGroup>
