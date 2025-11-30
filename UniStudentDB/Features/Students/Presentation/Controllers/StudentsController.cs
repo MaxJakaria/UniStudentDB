@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using UniStudentDB.Core.Models;
 using UniStudentDB.Features.Students.Application.UseCases;
 using UniStudentDB.Features.Students.Presentation.Dto;
@@ -51,15 +52,37 @@ namespace UniStudentDB.Features.Students.Presentation.Controllers
             );
         }
 
-        // --- GET (Read All) ---
+        // --- GET (Read All with Search & Filter) ---
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        // [FromQuery] binds parameters from the URL query string
+        // Example: api/students?searchTerm=Tanvir&department=CSE
+        public async Task<IActionResult> GetAll([FromQuery] StudentFilterRequest request)
         {
-            var result = await _getAllUseCase.ExecuteAsync();
+            var result = await _getAllUseCase.ExecuteAsync(
+                request.SearchTerm,
+                request.Department,
+                request.PageNumber,
+                request.PageSize
+            );
 
             return result.Match(
-                // List<Student> -> List<StudentResponse>
-                students => Ok(students.Select(s => s.ToResponse("Data fetched"))),
+                pagedResult =>
+                {
+                    // 1. Convert Entity List to Response DTO List
+                    var responseData = pagedResult
+                        .Data.Select(s => s.ToResponse("Data fetched"))
+                        .ToList();
+
+                    // 2. Create PagedResponse (which inherits from BaseResponse)
+                    var response = new PagedResponse<StudentResponse>(
+                        responseData,
+                        pagedResult.TotalCount,
+                        pagedResult.PageNumber,
+                        pagedResult.PageSize
+                    );
+
+                    return Ok(response);
+                },
                 errors => Problem(errors[0].Description)
             );
         }

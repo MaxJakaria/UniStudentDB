@@ -1,5 +1,6 @@
 ﻿using ErrorOr;
 using Microsoft.EntityFrameworkCore;
+using UniStudentDB.Core.Models;
 using UniStudentDB.Features.Students.Data.Models;
 using UniStudentDB.Features.Students.Domain.Entities;
 using UniStudentDB.Features.Students.Domain.Repository;
@@ -45,13 +46,47 @@ namespace UniStudentDB.Features.Students.Data.Repository
             }
         }
 
-        public async Task<ErrorOr<List<Student>>> GetAllStudentsAsync()
+        public async Task<ErrorOr<PagedResponse<Student>>> GetAllStudentsAsync(
+            string? searchTerm,
+            string? department,
+            int pageNumber,
+            int pageSize
+        )
         {
             try
             {
-                var models = await _context.Students.ToListAsync();
+                // 1. Queryable
+                var query = _context.Students.AsQueryable();
+
+                // Searching: if searchTerm is provided
+                if (!string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    // SQL: WHERE Name LIKE '%searchTerm%'
+                    query = query.Where(s => s.Name.Contains(searchTerm.ToLower()));
+                }
+
+                // Filtering: if department is provided
+                if (!string.IsNullOrWhiteSpace(department))
+                {
+                    // SQL: AND Department = 'department'
+                    query = query.Where(s => s.Department == department.ToLower());
+                }
+
+                // 2. Count Total Items (Before Pagination)
+                var totalCount = await query.CountAsync();
+
+                // 3. Get Paginated Data
+                var skipCount = (pageNumber - 1) * pageSize;
+
+                var models = await query
+                    .Skip(skipCount) // Skip previous pages
+                    .Take(pageSize) // Take only current page items
+                    .ToListAsync();
+
                 // Model -> Entity [casting]
-                return models.Cast<Student>().ToList();
+                var students = models.Cast<Student>().ToList();
+
+                return new PagedResponse<Student>(students, totalCount, pageNumber, pageSize);
             }
             catch (Exception ex)
             {
@@ -63,7 +98,6 @@ namespace UniStudentDB.Features.Students.Data.Repository
         {
             try
             {
-
                 var model = await _context.Students.FindAsync(id);
 
                 if (model is null)
@@ -131,7 +165,5 @@ namespace UniStudentDB.Features.Students.Data.Repository
                 return Error.Failure("DeleteStudent.Failure", ex.Message);
             }
         }
-
-        
     }
 }
