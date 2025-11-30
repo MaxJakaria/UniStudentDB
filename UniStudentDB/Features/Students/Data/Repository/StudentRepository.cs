@@ -1,5 +1,6 @@
 ﻿using ErrorOr;
 using Microsoft.EntityFrameworkCore;
+using UniStudentDB.Core.Models;
 using UniStudentDB.Features.Students.Data.Models;
 using UniStudentDB.Features.Students.Domain.Entities;
 using UniStudentDB.Features.Students.Domain.Repository;
@@ -45,7 +46,7 @@ namespace UniStudentDB.Features.Students.Data.Repository
             }
         }
 
-        public async Task<ErrorOr<List<Student>>> GetAllStudentsAsync(
+        public async Task<ErrorOr<PagedResponse<Student>>> GetAllStudentsAsync(
             string? searchTerm,
             string? department,
             int pageNumber,
@@ -71,18 +72,21 @@ namespace UniStudentDB.Features.Students.Data.Repository
                     query = query.Where(s => s.Department == department.ToLower());
                 }
 
-                // 2. Pagination Logic
-                // Formula: Skip = (Page - 1) * Size
+                // 2. Count Total Items (Before Pagination)
+                var totalCount = await query.CountAsync();
+
+                // 3. Get Paginated Data
                 var skipCount = (pageNumber - 1) * pageSize;
 
-                // 3. Execution
                 var models = await query
                     .Skip(skipCount) // Skip previous pages
                     .Take(pageSize) // Take only current page items
                     .ToListAsync();
 
                 // Model -> Entity [casting]
-                return models.Cast<Student>().ToList();
+                var students = models.Cast<Student>().ToList();
+
+                return new PagedResponse<Student>(students, totalCount, pageNumber, pageSize);
             }
             catch (Exception ex)
             {

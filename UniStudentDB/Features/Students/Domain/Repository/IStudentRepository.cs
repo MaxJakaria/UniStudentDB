@@ -1,4 +1,5 @@
 ﻿using ErrorOr;
+using UniStudentDB.Core.Models;
 using UniStudentDB.Features.Students.Domain.Entities;
 
 namespace UniStudentDB.Features.Students.Domain.Repository
@@ -6,7 +7,7 @@ namespace UniStudentDB.Features.Students.Domain.Repository
     public interface IStudentRepository
     {
         Task<ErrorOr<Created>> AddStudentAsync(Student student);
-        Task<ErrorOr<List<Student>>> GetAllStudentsAsync(
+        Task<ErrorOr<PagedResponse<Student>>> GetAllStudentsAsync(
             string? searchTerm,
             string? department,
             int pageNumber,

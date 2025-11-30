@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using UniStudentDB.Core.Models;
 using UniStudentDB.Features.Students.Application.UseCases;
 using UniStudentDB.Features.Students.Presentation.Dto;
@@ -65,7 +66,23 @@ namespace UniStudentDB.Features.Students.Presentation.Controllers
             );
 
             return result.Match(
-                students => Ok(students.Select(s => s.ToResponse("Data fetched"))),
+                pagedResult =>
+                {
+                    // 1. Convert Entity List to Response DTO List
+                    var responseData = pagedResult
+                        .Data.Select(s => s.ToResponse("Data fetched"))
+                        .ToList();
+
+                    // 2. Create PagedResponse (which inherits from BaseResponse)
+                    var response = new PagedResponse<StudentResponse>(
+                        responseData,
+                        pagedResult.TotalCount,
+                        pagedResult.PageNumber,
+                        pagedResult.PageSize
+                    );
+
+                    return Ok(response);
+                },
                 errors => Problem(errors[0].Description)
             );
         }
