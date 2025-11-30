@@ -13,9 +13,12 @@ namespace UniStudentDB.Features.Students.Application.UseCases
             _repository = repository;
         }
 
-        public async Task<ErrorOr<List<Student>>> ExecuteAsync()
+        public async Task<ErrorOr<List<Student>>> ExecuteAsync(
+            string? searchTerm,
+            string? department
+        )
         {
-            return await _repository.GetAllStudentsAsync();
+            return await _repository.GetAllStudentsAsync(searchTerm, department);
         }
     }
 }

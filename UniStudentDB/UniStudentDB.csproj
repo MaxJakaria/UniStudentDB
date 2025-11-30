@@ -19,9 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Application\" />
     <Folder Include="Features\Students\Data\DataSources\" />
-    <Folder Include="Infrastructure\" />
   </ItemGroup>
 
 </Project>

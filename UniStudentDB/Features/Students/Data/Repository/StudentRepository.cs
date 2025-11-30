@@ -45,11 +45,30 @@ namespace UniStudentDB.Features.Students.Data.Repository
             }
         }
 
-        public async Task<ErrorOr<List<Student>>> GetAllStudentsAsync()
+        public async Task<ErrorOr<List<Student>>> GetAllStudentsAsync(string? searchTerm, string? department)
         {
             try
             {
-                var models = await _context.Students.ToListAsync();
+                // 1. Queryable
+                var query = _context.Students.AsQueryable();
+
+                // Searching: if searchTerm is provided
+                if (!string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    // SQL: WHERE Name LIKE '%searchTerm%'
+                    query = query.Where(s => s.Name.Contains(searchTerm));
+                }
+
+                // Filtering: if department is provided
+                if (!string.IsNullOrWhiteSpace(department))
+                {
+                    // SQL: AND Department = 'department'
+                    query = query.Where(s => s.Department == department);
+                }
+
+                // 2. Execution
+                var models = await query.ToListAsync();
+                
                 // Model -> Entity [casting]
                 return models.Cast<Student>().ToList();
             }

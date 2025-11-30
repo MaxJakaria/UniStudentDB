@@ -51,14 +51,15 @@ namespace UniStudentDB.Features.Students.Presentation.Controllers
             );
         }
 
-        // --- GET (Read All) ---
+        // --- GET (Read All with Search & Filter) ---
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        // [FromQuery] binds parameters from the URL query string
+        // Example: api/students?searchTerm=Tanvir&department=CSE
+        public async Task<IActionResult> GetAll([FromQuery] StudentFilterRequest request)
         {
-            var result = await _getAllUseCase.ExecuteAsync();
+            var result = await _getAllUseCase.ExecuteAsync(request.SearchTerm, request.Department);
 
             return result.Match(
-                // List<Student> -> List<StudentResponse>
                 students => Ok(students.Select(s => s.ToResponse("Data fetched"))),
                 errors => Problem(errors[0].Description)
             );
