@@ -45,7 +45,12 @@ namespace UniStudentDB.Features.Students.Data.Repository
             }
         }
 
-        public async Task<ErrorOr<List<Student>>> GetAllStudentsAsync(string? searchTerm, string? department)
+        public async Task<ErrorOr<List<Student>>> GetAllStudentsAsync(
+            string? searchTerm,
+            string? department,
+            int pageNumber,
+            int pageSize
+        )
         {
             try
             {
@@ -56,19 +61,26 @@ namespace UniStudentDB.Features.Students.Data.Repository
                 if (!string.IsNullOrWhiteSpace(searchTerm))
                 {
                     // SQL: WHERE Name LIKE '%searchTerm%'
-                    query = query.Where(s => s.Name.Contains(searchTerm));
+                    query = query.Where(s => s.Name.Contains(searchTerm.ToLower()));
                 }
 
                 // Filtering: if department is provided
                 if (!string.IsNullOrWhiteSpace(department))
                 {
                     // SQL: AND Department = 'department'
-                    query = query.Where(s => s.Department == department);
+                    query = query.Where(s => s.Department == department.ToLower());
                 }
 
-                // 2. Execution
-                var models = await query.ToListAsync();
-                
+                // 2. Pagination Logic
+                // Formula: Skip = (Page - 1) * Size
+                var skipCount = (pageNumber - 1) * pageSize;
+
+                // 3. Execution
+                var models = await query
+                    .Skip(skipCount) // Skip previous pages
+                    .Take(pageSize) // Take only current page items
+                    .ToListAsync();
+
                 // Model -> Entity [casting]
                 return models.Cast<Student>().ToList();
             }
@@ -82,7 +94,6 @@ namespace UniStudentDB.Features.Students.Data.Repository
         {
             try
             {
-
                 var model = await _context.Students.FindAsync(id);
 
                 if (model is null)
@@ -150,7 +161,5 @@ namespace UniStudentDB.Features.Students.Data.Repository
                 return Error.Failure("DeleteStudent.Failure", ex.Message);
             }
         }
-
-        
     }
 }

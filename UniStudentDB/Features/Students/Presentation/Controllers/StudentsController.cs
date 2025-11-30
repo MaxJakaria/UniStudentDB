@@ -57,7 +57,12 @@ namespace UniStudentDB.Features.Students.Presentation.Controllers
         // Example: api/students?searchTerm=Tanvir&department=CSE
         public async Task<IActionResult> GetAll([FromQuery] StudentFilterRequest request)
         {
-            var result = await _getAllUseCase.ExecuteAsync(request.SearchTerm, request.Department);
+            var result = await _getAllUseCase.ExecuteAsync(
+                request.SearchTerm,
+                request.Department,
+                request.PageNumber,
+                request.PageSize
+            );
 
             return result.Match(
                 students => Ok(students.Select(s => s.ToResponse("Data fetched"))),

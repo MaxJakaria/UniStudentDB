@@ -15,10 +15,17 @@ namespace UniStudentDB.Features.Students.Application.UseCases
 
         public async Task<ErrorOr<List<Student>>> ExecuteAsync(
             string? searchTerm,
-            string? department
+            string? department,
+            int pageNumber,
+            int pageSize
         )
         {
-            return await _repository.GetAllStudentsAsync(searchTerm, department);
+            return await _repository.GetAllStudentsAsync(
+                searchTerm,
+                department,
+                pageNumber,
+                pageSize
+            );
         }
     }
 }
